@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { verifyToken } from "./middleware/auth.middleware.js";
-import { logger } from "./middleware/logger.middleware.js";
-import { rateLimiter } from "./middleware/rateLimiter.middleware.js";
+import { verifyToken } from "./middlewares/auth.middleware.js";
+import { logger } from "./middlewares/logger.middleware.js";
+import { rateLimiter } from "./middlewares/rateLimiter.middleware.js";
 
 const app = express();
 

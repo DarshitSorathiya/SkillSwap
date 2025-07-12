@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { SwapRequest } from "../models/swap.model.js";
+import { SwapRequest } from "../models/swaprequest.model.js";
 
 export const expirePendingSwaps = () => {
   cron.schedule("*0 0 * * *", async () => {

@@ -1,6 +1,7 @@
 import winston from "winston";
 import "winston-daily-rotate-file";
 import path from "path";
+import fs from "fs";
 
 const logDirectory = path.resolve("logs");
 
