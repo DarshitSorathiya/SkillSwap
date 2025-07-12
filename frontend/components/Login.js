@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import '../app/globals.css';
 
 export default function Login({ onClose }) {
     const router = useRouter();
@@ -14,6 +15,16 @@ export default function Login({ onClose }) {
     const [image, setImage] = useState(null);
     const [isTextDataSubmitted, setIsTextDataSubmitted] = useState(false);
 
+    const [username, setUsername] = useState("");
+    const [phone, setPhone] = useState("");
+    const [location, setLocation] = useState("");
+    const [dob, setDob] = useState("");
+    const [gender, setGender] = useState("");
+    const [isProfilePublic, setIsProfilePublic] = useState(false);
+    const [skillsOfferedInput, setSkillsOfferedInput] = useState("");
+    const [skillsWantedInput, setSkillsWantedInput] = useState("");
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (state === "Sign Up" && !isTextDataSubmitted) {
@@ -22,7 +33,7 @@ export default function Login({ onClose }) {
         // Handle login/signup logic here
     };
 
-  
+
 
     useEffect(() => {
         document.body.style.overflow = "hidden";
@@ -84,29 +95,95 @@ export default function Login({ onClose }) {
                 </div>
 
                 {state === "Sign Up" && isTextDataSubmitted ? (
-                    <div className="flex flex-col items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                        <label htmlFor="image" className="cursor-pointer group">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-green-500 flex items-center justify-center overflow-hidden group-hover:border-green-400 transition-colors">
-                                <Image
-                                    src={
-                                        image ? URL.createObjectURL(image) : "/placeholder-image.png"
-                                    }
-                                    alt="Upload"
-                                    width={80}
-                                    height={80}
-                                    className="rounded-full"
+                    <>
+                        {/* Profile Picture Upload */}
+                        <div className="flex flex-col items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <label htmlFor="image" className="cursor-pointer group">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-green-500 flex items-center justify-center overflow-hidden group-hover:border-green-400 transition-colors">
+                                    <Image
+                                        src={image ? URL.createObjectURL(image) : "/placeholder-image.png"}
+                                        alt="Upload"
+                                        width={80}
+                                        height={80}
+                                        className="rounded-full"
+                                    />
+                                </div>
+                                <input
+                                    type="file"
+                                    id="image"
+                                    hidden
+                                    onChange={(e) => setImage(e.target.files[0])}
                                 />
-                            </div>
+                            </label>
+                            <p className="text-xs sm:text-sm text-gray-400">Profile Picture</p>
+                        </div>
+
+                        {/* Additional Fields */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3">
                             <input
-                                type="file"
-                                id="image"
-                                hidden
-                                onChange={(e) => setImage(e.target.files[0])}
+                                type="text"
+                                placeholder="Username"
+                                className="input-style"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
                             />
+                            <input
+                                type="text"
+                                placeholder="Location"
+                                className="input-style"
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3">
+                            <input
+                                type="date"
+                                className="input-style"
+                                value={dob}
+                                onChange={(e) => setDob(e.target.value)}
+                            />
+                            <select
+                                className="input-style"
+                                value={gender}
+                                onChange={(e) => setGender(e.target.value)}
+                            >
+                                <option value="">Select Gender</option>
+                                <option value="female">Female</option>
+                                <option value="male">Male</option>
+                            </select>
+                        </div>
+
+                        <label className="flex items-center gap-2 text-sm text-gray-700 mb-2">
+                            <input
+                                type="checkbox"
+                                checked={isProfilePublic}
+                                onChange={(e) => setIsProfilePublic(e.target.checked)}
+                            />
+                            Make profile public?
                         </label>
-                        <p className="text-xs sm:text-sm text-gray-400">Profile Picture</p>
-                    </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-2">
+                            <input
+                                type="text"
+                                placeholder="Skills Offered (space separated)"
+                                className="input-style"
+                                value={skillsOfferedInput}
+                                onChange={(e) => setSkillsOfferedInput(e.target.value)}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Skills Wanted (space separated)"
+                                className="input-style"
+                                value={skillsWantedInput}
+                                onChange={(e) => setSkillsWantedInput(e.target.value)}
+                            />
+                        </div>
+
+                    </>
                 ) : (
+
                     <>
                         {state === "Sign Up" && (
                             <input
@@ -126,6 +203,15 @@ export default function Login({ onClose }) {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                         />
+                        {state === "Sign Up" && (
+                            <input
+                                type="tel"
+                                placeholder="Phone Number"
+                                className="input-style"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                            />
+                        )}
                         <input
                             type="password"
                             placeholder="Password"

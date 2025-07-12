@@ -27,3 +27,13 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 } */
+
+@layer components {
+  .input-style {
+    @apply w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 
+           rounded-lg mb-3 sm:mb-4 text-sm sm:text-base text-gray-800 
+           placeholder:text-gray-400 focus:outline-none focus:border-green-500 
+           transition-colors;
+  }
+}
+
