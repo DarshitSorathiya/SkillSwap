@@ -2,9 +2,11 @@
 import Link from "next/link";
 import Login from "./Login";
 import { useState } from "react";
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
     const [login, setLogin] = useState(false);
+    const pathname = usePathname();
 
     return (
         <>
@@ -18,9 +20,15 @@ export default function Navbar() {
                 <div className="flex items-center gap-3 space-x-4">
                     <Link
                         href="/swap"
-                        className="text-green-500 font-medium hover:text-green-600 transition-colors"
+                        className={`font-medium hover:text-green-600 transition-colors ${pathname === '/swap' ? 'text-green-500' : 'text-black'
+                            }`}
                     >
                         Swap Request
+                    </Link>
+
+                    <Link href="/" className={`font-medium hover:text-green-600 transition-colors ${pathname === '/' ? 'text-green-500' : 'text-black'
+                        }`}>
+                        Home
                     </Link>
 
                     <button
