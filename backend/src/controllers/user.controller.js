@@ -39,7 +39,7 @@ const register = asyncHandler(async (req, res) => {
     phoneNo,
     dob,
     gender,
-    isPublic = true,
+    isPublicProfile = true,
     skillsOffered = [],
     skillsWanted = [],
     availability = [],
@@ -64,7 +64,7 @@ const register = asyncHandler(async (req, res) => {
     phoneNo,
     dob,
     gender,
-    isPublic,
+    isPublicProfile,
     skillsOffered,
     skillsWanted,
     availability,
@@ -157,7 +157,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     skillsOffered,
     skillsWanted,
     availability,
-    isPublic,
+    isPublicProfile,
   } = req.body;
 
   const user = await User.findById(req.user._id);
@@ -170,7 +170,10 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   user.skillsOffered = skillsOffered || user.skillsOffered;
   user.skillsWanted = skillsWanted || user.skillsWanted;
   user.availability = availability || user.availability;
-  user.isPublic = typeof isPublic === "boolean" ? isPublic : user.isPublic;
+  user.isPublicProfile =
+    typeof isPublicProfile === "boolean"
+      ? isPublicProfile
+      : user.isPublicProfile;
 
   await user.save({ validateBeforeSave: false });
 

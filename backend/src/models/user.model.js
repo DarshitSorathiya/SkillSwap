@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema(
   {
@@ -22,6 +23,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      index: true,
       validate: [validator.isEmail, "Invalid email format"],
     },
     password: {
@@ -33,7 +35,8 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     profilePhoto: {
-      type: String,
+      url: { type: String },
+      public_id: { type: String },
     },
     dob: {
       type: Date,
@@ -111,19 +114,19 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-userSchema.methods.isPasswordCorrect = async (password, enteredPassword) => {
-  if (!password) {
+userSchema.methods.isPasswordCorrect = async function (enteredPassword) {
+  if (!this.password) {
     throw new Error("Password field is missing");
   }
-  return await bcrypt.compare(password, enteredPassword);
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
-userSchema.methods.generateAccessToken = (database) => {
+userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
-      _id: database._id,
-      username: database.username,
-      email: database.email,
+      _id: this._id,
+      username: this.username,
+      email: this.email,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
@@ -132,10 +135,10 @@ userSchema.methods.generateAccessToken = (database) => {
   );
 };
 
-userSchema.methods.generateRefreshToken = (database) => {
+userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
-      _id: database._id,
+      _id: this._id,
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
