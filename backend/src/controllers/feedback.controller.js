@@ -4,18 +4,30 @@ import { SwapRequest } from "../models/swaprequest.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import mongoose from "mongoose";
 
 const giveFeedback = asyncHandler(async (req, res) => {
   const { swapId } = req.params;
   const { rating, comment, toUser } = req.body;
 
-  if (!rating || !toUser) {
-    throw new ApiError(400, "Rating and toUser are required");
+  if (
+    !mongoose.Types.ObjectId.isValid(swapId) ||
+    !mongoose.Types.ObjectId.isValid(toUser)
+  ) {
+    throw new ApiError(400, "Invalid swapId or toUser ID");
+  }
+
+  if (!rating || typeof rating !== "number" || rating < 1 || rating > 5) {
+    throw new ApiError(400, "Rating must be a number between 1 and 5");
+  }
+
+  if (comment && typeof comment !== "string") {
+    throw new ApiError(400, "Comment must be a string");
   }
 
   const swap = await SwapRequest.findById(swapId);
   if (!swap) throw new ApiError(404, "Swap not found");
-  if (swap.status !== "accepted" && swap.status !== "completed") {
+  if (!["accepted", "completed"].includes(swap.status)) {
     throw new ApiError(400, "Feedback can only be left after a completed swap");
   }
 
@@ -24,11 +36,12 @@ const giveFeedback = asyncHandler(async (req, res) => {
     fromUser: req.user._id,
     toUser,
   });
-  if (existing)
+  if (existing) {
     throw new ApiError(
       409,
       "You have already submitted feedback for this user"
     );
+  }
 
   const feedback = await Feedback.create({
     swap: swapId,
@@ -38,7 +51,7 @@ const giveFeedback = asyncHandler(async (req, res) => {
     comment,
   });
 
-  const allFeedback = await Feedback.find({ toUser });
+  const allFeedback = await Feedback.find({ toUser, isDeleted: { $ne: true } });
   const avgRating =
     allFeedback.reduce((sum, f) => sum + f.rating, 0) / allFeedback.length;
 
@@ -54,9 +67,18 @@ const replyToFeedback = asyncHandler(async (req, res) => {
   const { feedbackId } = req.params;
   const { reply } = req.body;
 
+  if (!mongoose.Types.ObjectId.isValid(feedbackId)) {
+    throw new ApiError(400, "Invalid feedback ID");
+  }
+
+  if (!reply || typeof reply !== "string" || !reply.trim()) {
+    throw new ApiError(400, "Reply must be a non-empty string");
+  }
+
   const feedback = await Feedback.findById(feedbackId);
   if (!feedback) throw new ApiError(404, "Feedback not found");
-
+  if (feedback.isDeleted)
+    throw new ApiError(400, "Cannot reply to deleted feedback");
   if (String(feedback.toUser) !== String(req.user._id)) {
     throw new ApiError(403, "You can only reply to feedback directed to you");
   }
@@ -77,6 +99,8 @@ const getUserFeedback = asyncHandler(async (req, res) => {
   if (type === "given") filter.fromUser = req.user._id;
   else filter.toUser = req.user._id;
 
+  filter.isDeleted = { $ne: true };
+
   const feedbacks = await Feedback.find(filter)
     .populate("fromUser toUser swap", "fullname username")
     .sort({ createdAt: -1 })
@@ -90,11 +114,15 @@ const flagFeedback = asyncHandler(async (req, res) => {
   const { feedbackId } = req.params;
   const { reason } = req.body;
 
+  if (!mongoose.Types.ObjectId.isValid(feedbackId)) {
+    throw new ApiError(400, "Invalid feedback ID");
+  }
+
   const feedback = await Feedback.findById(feedbackId);
   if (!feedback) throw new ApiError(404, "Feedback not found");
 
   feedback.isFlagged = true;
-  feedback.flaggedReason = reason || "Inappropriate content";
+  feedback.flaggedReason = reason?.trim() || "Inappropriate content";
   await feedback.save();
 
   res.status(200).json(new ApiResponse(200, feedback, "Feedback flagged"));
@@ -102,6 +130,10 @@ const flagFeedback = asyncHandler(async (req, res) => {
 
 const unflagFeedback = asyncHandler(async (req, res) => {
   const { feedbackId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(feedbackId)) {
+    throw new ApiError(400, "Invalid feedback ID");
+  }
 
   const feedback = await Feedback.findById(feedbackId);
   if (!feedback) throw new ApiError(404, "Feedback not found");
@@ -124,6 +156,10 @@ const getFlaggedFeedback = asyncHandler(async (req, res) => {
 const deleteFeedback = asyncHandler(async (req, res) => {
   const { feedbackId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(feedbackId)) {
+    throw new ApiError(400, "Invalid feedback ID");
+  }
+
   const feedback = await Feedback.findById(feedbackId);
   if (!feedback) throw new ApiError(404, "Feedback not found");
 
@@ -137,8 +173,18 @@ const editFeedback = asyncHandler(async (req, res) => {
   const { feedbackId } = req.params;
   const { comment } = req.body;
 
+  if (!mongoose.Types.ObjectId.isValid(feedbackId)) {
+    throw new ApiError(400, "Invalid feedback ID");
+  }
+
+  if (!comment || typeof comment !== "string" || !comment.trim()) {
+    throw new ApiError(400, "Comment must be a non-empty string");
+  }
+
   const feedback = await Feedback.findById(feedbackId);
   if (!feedback) throw new ApiError(404, "Feedback not found");
+  if (feedback.isDeleted)
+    throw new ApiError(400, "Cannot edit deleted feedback");
   if (String(feedback.fromUser) !== String(req.user._id)) {
     throw new ApiError(403, "You can only edit your own feedback");
   }
@@ -148,7 +194,6 @@ const editFeedback = asyncHandler(async (req, res) => {
     comment: feedback.comment,
     editedAt: new Date(),
   });
-
   feedback.comment = comment;
   await feedback.save();
 

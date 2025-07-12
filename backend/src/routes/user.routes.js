@@ -9,6 +9,8 @@ import {
   getCurrentUser,
   uploadProfilePhoto,
   togglePrivacy,
+  sendEmailVerificationOTP,
+  verifyEmailOTP,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -29,5 +31,7 @@ router.post(
 );
 router.put("/toggle-privacy", verifyJWT, togglePrivacy);
 router.post("/logout", verifyJWT, logout);
+router.post("/verify/send-otp", sendEmailVerificationOTP);
+router.post("/verify/otp", verifyEmailOTP);
 
 export default router;

@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { v2 as cloudinary } from "cloudinary";
+import validator from "validator";
 
 const cookieOptions = {
   httpOnly: true,
@@ -44,21 +45,29 @@ const register = asyncHandler(async (req, res) => {
     availability = [],
   } = req.body;
 
-  if (
-    [username, fullname, email, password, phoneNo, dob].some(
-      (field) => field?.trim() === ""
-    )
-  ) {
-    throw new ApiError(400, "All fields are required");
+  if (!username || !fullname || !email || !password || !phoneNo || !dob) {
+    throw new ApiError(400, "All required fields must be provided");
+  }
+
+  if (!validator.isEmail(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+
+  if (!/^[0-9]{10}$/.test(phoneNo)) {
+    throw new ApiError(400, "Phone number must be 10 digits");
+  }
+
+  if (!validator.isDate(dob) || new Date(dob) > new Date()) {
+    throw new ApiError(400, "Invalid or future date of birth");
   }
 
   const existed = await User.findOne({ $or: [{ username }, { email }] });
   if (existed) throw new ApiError(400, "User already exists. Try logging in.");
 
   const user = await User.create({
-    username,
+    username: username.toLowerCase(),
     fullname,
-    email,
+    email: email.toLowerCase(),
     password,
     phoneNo,
     dob,
@@ -96,6 +105,7 @@ const login = asyncHandler(async (req, res) => {
 
   if (!(username || email))
     throw new ApiError(400, "Username or email is required");
+  if (!password) throw new ApiError(400, "Password is required");
 
   const user = await User.findOne({ $or: [{ username }, { email }] });
   if (!user) throw new ApiError(401, "User not found");
@@ -106,11 +116,9 @@ const login = asyncHandler(async (req, res) => {
   const { refreshToken, accessToken } = await generateAccessAndRefreshToken(
     user._id
   );
-
   const loggedIn = await User.findById(user._id).select(
     "-password -refreshToken"
   );
-  if (!loggedIn) throw new ApiError(500, "Login failed");
 
   return res
     .status(200)
@@ -162,6 +170,16 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   if (!user) throw new ApiError(400, "User not found");
 
+  if (email && !validator.isEmail(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+  if (phoneNo && !/^[0-9]{10}$/.test(phoneNo)) {
+    throw new ApiError(400, "Phone number must be 10 digits");
+  }
+  if (dob && (!validator.isDate(dob) || new Date(dob) > new Date())) {
+    throw new ApiError(400, "Invalid date of birth");
+  }
+
   user.fullname = fullname || user.fullname;
   user.phoneNo = phoneNo || user.phoneNo;
   user.email = email || user.email;
@@ -187,8 +205,13 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword, confPassword } = req.body;
 
-  if (newPassword !== confPassword)
+  if (!oldPassword || !newPassword || !confPassword) {
+    throw new ApiError(400, "All password fields are required");
+  }
+
+  if (newPassword !== confPassword) {
     throw new ApiError(400, "New password and confirm password must match");
+  }
 
   const user = await User.findById(req.user._id);
   if (!user) throw new ApiError(400, "User not found");
@@ -270,6 +293,45 @@ const togglePrivacy = asyncHandler(async (req, res) => {
     );
 });
 
+const sendEmailVerificationOTP = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) throw new ApiError(404, "User not found");
+
+  const otp = crypto.randomInt(100000, 999999).toString();
+  user.otp = otp;
+  user.otpExpiresAt = Date.now() + 5 * 60 * 1000;
+
+  await user.save({ validateBeforeSave: false });
+
+  await sendEmail(
+    user.email,
+    "Verify Your Email - Skill Swap",
+    `Hello ${user.fullname},\n\nYour verification code is: ${otp}\nThis code will expire in 5 minutes.\n\nThanks,\nSkill Swap Platform Team`
+  );
+
+  res.status(200).json(new ApiResponse(200, {}, "OTP sent to email"));
+});
+
+const verifyEmailOTP = asyncHandler(async (req, res) => {
+  const { otp } = req.body;
+  const user = await User.findById(req.user._id);
+
+  if (!user || !user.otp || !user.otpExpiresAt) {
+    throw new ApiError(400, "No OTP found or OTP expired");
+  }
+
+  if (user.otp !== otp || user.otpExpiresAt < Date.now()) {
+    throw new ApiError(400, "Invalid or expired OTP");
+  }
+
+  user.isVerified = true;
+  user.otp = null;
+  user.otpExpiresAt = null;
+  await user.save({ validateBeforeSave: false });
+
+  res.status(200).json(new ApiResponse(200, {}, "Email verified successfully"));
+});
+
 export {
   register,
   login,
@@ -280,4 +342,6 @@ export {
   getCurrentUser,
   uploadProfilePhoto,
   togglePrivacy,
+  sendEmailVerificationOTP,
+  verifyEmailOTP,
 };
