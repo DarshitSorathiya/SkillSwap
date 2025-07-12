@@ -1,5 +1,7 @@
 "use client";
 import Card from "@/components/Card";
+import Link from "next/link";
+import { useRouter } from 'next/navigation';
 import { useState } from "react";
 
 export default function Home() {
@@ -23,16 +25,22 @@ export default function Home() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentItems = dummyData.slice(startIndex, endIndex);
+  const router = useRouter();
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handlecard = () => {
+    router.push('/porfo');
+
+  };
+
   return (
     <>
-      <div className="px-8 mt-5 flex gap-4 justify-end">
-        <div className="relative w-64">
+      <div className="px-8 mt-5 flex mx-38 gap-4 justify-end">
+        <div className="relative w-64 ">
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="w-full px-4 py-2 text-left bg-green-50 border border-gray-300 rounded-md hover:bg-gray-300"
@@ -61,29 +69,27 @@ export default function Home() {
           )}
         </div>
 
-        <div className="">
-          <div className="relative w-96">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-96 px-4 py-2 bg-green-50 border border-green-300 rounded-md focus:outline-none focus:border-green-500"
-            />
-          </div>
+        <div className="relative ">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className=" w-96 px-4 py-2 bg-green-50 border border-green-300 rounded-md focus:outline-none focus:border-green-500"
+          />
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center gap-4 mx-38 px-8 mt-4">
-        {currentItems.map((item) => (
-          <Card
-            key={item.id}
-            name={item.name}
-            skilloffered={item.skilloffered}
-            skillwanted={item.skillwanted}
-          />
-        ))}
-      </div>
+        <div className="flex flex-col items-center justify-center gap-4 mx-38 px-8 mt-4">
+          {currentItems.map((item) => (
+            <Card
+              key={item.id}
+              name={item.name}
+              skilloffered={item.skilloffered}
+              skillwanted={item.skillwanted}
+            />
+          ))}
+        </div>
 
       {/* Pagination Controls */}
       <div className="flex justify-center items-center gap-2 py-8">
@@ -97,17 +103,16 @@ export default function Home() {
             <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
         </button>
-        
+
         <div className="flex gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
               key={page}
               onClick={() => handlePageChange(page)}
-              className={`w-10 h-10 rounded-md flex items-center justify-center transition-colors ${
-                currentPage === page
-                  ? 'bg-green-500 text-white'
-                  : 'bg-green-50 text-gray-700 hover:bg-green-100'
-              }`}
+              className={`w-10 h-10 rounded-md flex items-center justify-center transition-colors ${currentPage === page
+                ? 'bg-green-500 text-white'
+                : 'bg-green-50 text-gray-700 hover:bg-green-100'
+                }`}
             >
               {page}
             </button>

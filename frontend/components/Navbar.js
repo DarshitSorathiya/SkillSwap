@@ -1,4 +1,3 @@
-
 "use client";
 import Link from "next/link";
 import Login from "./Login";
@@ -12,11 +11,18 @@ export default function Navbar() {
             <nav className="px-48 py-4 flex shadow-md justify-between items-center">
                 {/* Brand Name */}
                 <div className="text-green-500 text-2xl font-bold">
-                    <Link href="/">Skil Swapie</Link>   
+                    <Link href="/">Skil Swapie</Link>
                 </div>
 
                 {/* Right Side Buttons */}
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-3 space-x-4">
+                    <Link
+                        href="/swap"
+                        className="text-green-500 font-medium hover:text-green-600 transition-colors"
+                    >
+                        Swap Request
+                    </Link>
+
                     <button
                         onClick={() => setLogin(true)}
                         className="bg-green-500 text-white px-4 py-2 rounded-md font-medium"
