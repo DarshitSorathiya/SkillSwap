@@ -4,33 +4,101 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 import '../app/globals.css';
 
 export default function Login({ onClose }) {
     const router = useRouter();
+    const { login, register, error: authError } = useAuth();
     const [state, setState] = useState("Login");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [image, setImage] = useState(null);
     const [isTextDataSubmitted, setIsTextDataSubmitted] = useState(false);
-
     const [username, setUsername] = useState("");
     const [phone, setPhone] = useState("");
     const [location, setLocation] = useState("");
     const [dob, setDob] = useState("");
     const [gender, setGender] = useState("");
-    const [isProfilePublic, setIsProfilePublic] = useState(false);
+    const [isProfilePublic, setIsProfilePublic] = useState(true);
     const [skillsOfferedInput, setSkillsOfferedInput] = useState("");
     const [skillsWantedInput, setSkillsWantedInput] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        if (authError) {
+            setError(authError);
+        }
+    }, [authError]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (state === "Sign Up" && !isTextDataSubmitted) {
+            if (!name || !email || !password) {
+                setError("Please fill in all required fields");
+                return;
+            }
             return setIsTextDataSubmitted(true);
         }
-        // Handle login/signup logic here
+
+        setError("");
+        setLoading(true);
+
+        try {
+            if (state === "Login") {
+                if (!username && !email) {
+                    throw new Error("Username or email is required");
+                }
+                if (!password) {
+                    throw new Error("Password is required");
+                }
+
+                await login({
+                    username: username || email,
+                    password,
+                });
+            } else {
+                // Validation for registration
+                if (!username || !name || !email || !password || !phone || !dob) {
+                    throw new Error("Please fill in all required fields");
+                }
+
+                const skillsOffered = skillsOfferedInput.split(/[ ,]+/).filter(Boolean);
+                const skillsWanted = skillsWantedInput.split(/[ ,]+/).filter(Boolean);
+
+                if (skillsOffered.length === 0) {
+                    throw new Error("Please add at least one skill you can offer");
+                }
+
+                const formData = new FormData();
+                formData.append("username", username);
+                formData.append("fullname", name);
+                formData.append("email", email);
+                formData.append("password", password);
+                formData.append("phoneNo", phone);
+                formData.append("dob", dob);
+                formData.append("gender", gender);
+                formData.append("isPublicProfile", isProfilePublic);
+                formData.append("skillsOffered", JSON.stringify(skillsOffered));
+                formData.append("skillsWanted", JSON.stringify(skillsWanted));
+                formData.append("availability", JSON.stringify([]));
+                
+                if (image) {
+                    formData.append("profilePhoto", image);
+                }
+
+                await register(formData);
+            }
+            onClose();
+            router.refresh();
+        } catch (err) {
+            console.error("Auth error:", err);
+            setError(err.message || err.response?.data?.message || "An error occurred");
+        } finally {
+            setLoading(false);
+        }
     };
 
 
@@ -229,11 +297,18 @@ export default function Login({ onClose }) {
                     </p>
                 )}
 
+                {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg mb-4 text-sm">
+                        {error}
+                    </div>
+                )}
+
                 <button
                     type="submit"
-                    className="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 sm:py-3 text-sm sm:text-base font-medium rounded-lg transition-colors duration-300 shadow-md"
+                    disabled={loading}
+                    className={`w-full ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'} text-white py-2.5 sm:py-3 text-sm sm:text-base font-medium rounded-lg transition-colors duration-300 shadow-md`}
                 >
-                    {state === "Login" ? "Login" : isTextDataSubmitted ? "Create Account" : "Next"}
+                    {loading ? 'Please wait...' : state === "Login" ? "Login" : isTextDataSubmitted ? "Create Account" : "Next"}
                 </button>
 
                 <p className="text-center text-gray-600 text-xs sm:text-sm mt-4 sm:mt-6">

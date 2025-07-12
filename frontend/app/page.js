@@ -1,135 +1,161 @@
 "use client";
+import { useState, useEffect } from "react";
 import Card from "@/components/Card";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
-import { useState } from "react";
+import api from "@/utils/api";
 
 export default function Home() {
+  const [selected, setSelected] = useState("All Skills");
   const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState("Availability");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
-  const options = ["Weekdays (Morning)", "Weekdays (Evening)", "Weekends (Morning)", "Weekends (Evening)"];
+  const [searchQuery, setSearchQuery] = useState("");
+  const [skillFilter, setSkillFilter] = useState("all");
+  const itemsPerPage = 6;
 
-  // Example data array - replace this with your actual data
-  const dummyData = Array(12).fill(null).map((_, index) => ({
-    id: index + 1,
-    name: `User ${index + 1}`,
-    skilloffered: ["React", "Node.js"],
-    skillwanted: ["Python", "UI/UX"]
-  }));
+  const router = useRouter();
 
-  // Calculate pagination
-  const totalPages = Math.ceil(dummyData.length / itemsPerPage);
+  useEffect(() => {
+    fetchUsers();
+  }, [skillFilter, searchQuery]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      // Assuming you have an endpoint that returns users with their skills
+      const response = await api.get('/users', {
+        params: {
+          search: searchQuery,
+          skillType: skillFilter !== 'all' ? skillFilter : undefined,
+        }
+      });
+      setUsers(response.data.data || []);
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+      setError(err.response?.data?.message || 'Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Pagination
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = dummyData.slice(startIndex, endIndex);
-  const router = useRouter();
+  const currentItems = users.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(users.length / itemsPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handlecard = () => {
-    router.push('/porfo');
-
-  };
-
   return (
-    <>
-      <div className="px-8 mt-5 flex mx-38 gap-4 justify-end">
-        <div className="relative w-64 ">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="w-full px-4 py-2 text-left bg-green-50 border border-gray-300 rounded-md hover:bg-gray-300"
-          >
-            {selected}
-            <span className="absolute right-2 top-1/2 transform -translate-y-1/2">
-              ▼
-            </span>
-          </button>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div className="w-full sm:w-64">
+          <div className="relative">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="w-full px-4 py-2 text-left bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              {selected}
+              <span className="absolute right-2 top-1/2 transform -translate-y-1/2">▼</span>
+            </button>
 
-          {isOpen && (
-            <div className="absolute w-full mt-1 bg-gray-100 border border-green-800 rounded-md shadow-lg">
-              {options.map((option, i) => (
-                <div
-                  key={i}
-                  onClick={() => {
-                    setSelected(option);
-                    setIsOpen(false);
-                  }}
-                  className="px-4 py-2 hover:bg-green-50 cursor-pointer"
-                >
-                  {option}
-                </div>
-              ))}
-            </div>
-          )}
+            {isOpen && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                {["All Skills", "Skills Offered", "Skills Wanted"].map((option) => (
+                  <button
+                    key={option}
+                    className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                    onClick={() => {
+                      setSelected(option);
+                      setSkillFilter(option.toLowerCase().replace(' ', '_'));
+                      setIsOpen(false);
+                    }}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="relative ">
+        <div className="w-full sm:w-auto">
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search skills or users..."
+            className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className=" w-96 px-4 py-2 bg-green-50 border border-green-300 rounded-md focus:outline-none focus:border-green-500"
           />
         </div>
       </div>
 
-        <div className="flex flex-col items-center justify-center gap-4 mx-38 px-8 mt-4">
-          {currentItems.map((item) => (
-            <Card
-              key={item.id}
-              name={item.name}
-              skilloffered={item.skilloffered}
-              skillwanted={item.skillwanted}
-            />
-          ))}
+      {error && (
+        <div className="text-red-500 text-center mb-4">
+          {error}
         </div>
+      )}
 
-      {/* Pagination Controls */}
-      <div className="flex justify-center items-center gap-2 py-8">
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="w-10 h-10 rounded-md bg-green-50 border border-green-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-100 transition-colors flex items-center justify-center"
-          aria-label="Previous page"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-          </svg>
-        </button>
-
-        <div className="flex gap-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => handlePageChange(page)}
-              className={`w-10 h-10 rounded-md flex items-center justify-center transition-colors ${currentPage === page
-                ? 'bg-green-500 text-white'
-                : 'bg-green-50 text-gray-700 hover:bg-green-100'
-                }`}
-            >
-              {page}
-            </button>
-          ))}
+      {loading ? (
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
         </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-6">
+            {currentItems.map((user) => (
+              <Card
+                key={user._id}
+                id={user._id}
+                name={user.fullname}
+                skillsOffered={user.skillsOffered}
+                skillsWanted={user.skillsWanted}
+                availability={user.availability}
+                profilePhoto={user.profilePhoto?.url}
+                isPublicProfile={user.isPublicProfile}
+              />
+            ))}
+          </div>
 
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="w-10 h-10 rounded-md bg-green-50 border border-green-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-100 transition-colors flex items-center justify-center"
-          aria-label="Next page"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-          </svg>
-        </button>
-      </div>
-    </>
+          {users.length > itemsPerPage && (
+            <div className="flex justify-center items-center gap-2 mt-8">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="w-10 h-10 rounded-md bg-white border border-gray-300 flex items-center justify-center disabled:opacity-50"
+              >
+                ←
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`w-10 h-10 rounded-md flex items-center justify-center ${
+                    currentPage === page
+                      ? 'bg-green-500 text-white'
+                      : 'bg-white border border-gray-300'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="w-10 h-10 rounded-md bg-white border border-gray-300 flex items-center justify-center disabled:opacity-50"
+              >
+                →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }

@@ -6,7 +6,7 @@ const verifyJWT = asyncHandler(async (req, _, next) => {
   try {
     const authHeader = req.header("Authorization") || "";
     const token =
-      req.cookies?.accessToken ||
+      req.cookies?.apiToken ||
       (authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null);
 
     if (!token) {
@@ -15,7 +15,7 @@ const verifyJWT = asyncHandler(async (req, _, next) => {
 
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    req.user = decodedToken;
+    req.apiToken = decodedToken;
 
     next();
   } catch (error) {
