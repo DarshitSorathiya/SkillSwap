@@ -1,7 +1,8 @@
-import React from 'react'
+"use client";
+import React from 'react';
+import { useRouter } from 'next/navigation';
 
 // Add props for flexibility
-// ...existing code...
 const Card = ({
   name = "Card Title",
   skilloffered = ["React" , "Node.js"],
@@ -9,9 +10,14 @@ const Card = ({
   onAction,
   actionLabel = "Request"
 }) => {
+  const router = useRouter();
   // Ensure skills are arrays
   const offered = Array.isArray(skilloffered) ? skilloffered : [skilloffered];
   const wanted = Array.isArray(skillwanted) ? skillwanted : [skillwanted];
+
+  const handleClick = () => {
+    router.push('/porfo');
+  };
 
   return (
     <div className="w-full gap-12 bg-white rounded-lg shadow-md p-6 border border-gray-200 flex ">
@@ -50,7 +56,7 @@ const Card = ({
       <div className='flex items-center justify-end ml-auto'>
         <button
           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-          onClick={onAction}
+          onClick={handleClick}
         >
           {actionLabel}
         </button>
@@ -59,6 +65,5 @@ const Card = ({
     </div >
   )
 }
-// ...existing code...
 
 export default Card
