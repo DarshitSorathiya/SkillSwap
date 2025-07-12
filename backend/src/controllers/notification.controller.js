@@ -36,7 +36,10 @@ const getNotifications = asyncHandler(async (req, res) => {
 
   const now = new Date();
   const notifications = await Notification.find({
-    visibleTo: { $in: visibility },
+    $or: [
+      { recipient: user._id },
+      { recipient: null, visibleTo: { $in: visibility } },
+    ],
     isArchived: false,
     expiresAt: { $gt: now },
   }).sort({ priority: -1, createdAt: -1 });
