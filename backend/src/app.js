@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { verifyToken } from "./middlewares/auth.middleware.js";
-import { logger } from "./middlewares/logger.middleware.js";
-import { rateLimiter } from "./middlewares/rateLimiter.middleware.js";
+// import { verifyToken } from "./middlewares/auth.middleware.js";
+// import { logger } from "./middlewares/logger.middleware.js";
+// import { rateLimiter } from "./middlewares/rateLimiter.middleware.js";
 import userRoutes from "./routes/user.routes.js";
 import skillRoutes from "./routes/skill.routes.js";
 import swapRoutes from "./routes/swap.routes.js";
@@ -26,9 +26,9 @@ app.use(express.static("public"));
 
 app.use(cookieParser());
 
-app.use(logger);
-app.use(verifyToken);
-app.use(rateLimiter);
+// app.use(logger);
+// app.use(verifyToken);
+// app.use(rateLimiter);
 
 app.use("/api/users", userRoutes);
 app.use("/api/skills", skillRoutes);

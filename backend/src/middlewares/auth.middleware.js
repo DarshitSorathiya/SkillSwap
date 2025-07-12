@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const verifyToken = asyncHandler(async (req, _, next) => {
+const verifyJWT = asyncHandler(async (req, _, next) => {
   try {
     const authHeader = req.header("Authorization") || "";
     const token =
@@ -23,4 +23,4 @@ const verifyToken = asyncHandler(async (req, _, next) => {
   }
 });
 
-export { verifyToken };
+export { verifyJWT };

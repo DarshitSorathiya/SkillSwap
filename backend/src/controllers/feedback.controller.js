@@ -1,6 +1,6 @@
 import { Feedback } from "../models/feedback.model.js";
 import { User } from "../models/user.model.js";
-import { SwapRequest } from "../models/swap.model.js";
+import { SwapRequest } from "../models/swaprequest.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -165,4 +165,5 @@ export {
   unflagFeedback,
   getFlaggedFeedback,
   deleteFeedback,
+  editFeedback,
 };

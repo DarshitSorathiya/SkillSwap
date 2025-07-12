@@ -1,8 +1,8 @@
 import { User } from "../models/user.model.js";
-import { AdminLog } from "../models/adminLog.model.js";
+import { Admin } from "../models/admin.model.js";
 import { Skill } from "../models/skill.model.js";
 import { Feedback } from "../models/feedback.model.js";
-import { SwapRequest } from "../models/swap.model.js";
+import { SwapRequest } from "../models/swaprequest.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -18,7 +18,7 @@ const toggleUserBan = asyncHandler(async (req, res) => {
   user.isBanned = !user.isBanned;
   await user.save();
 
-  await AdminLog.create({
+  await Admin.create({
     action: user.isBanned ? "ban_user" : "unban_user",
     performedBy: req.user._id,
     targetUser: user._id,
@@ -44,7 +44,7 @@ const toggleAdminAccess = asyncHandler(async (req, res) => {
   user.isAdmin = !user.isAdmin;
   await user.save();
 
-  await AdminLog.create({
+  await Admin.create({
     action: user.isAdmin ? "promote_admin" : "demote_admin",
     performedBy: req.user._id,
     targetUser: user._id,
@@ -94,8 +94,8 @@ const downloadUserReport = asyncHandler(async (req, res) => {
   res.send(csv);
 });
 
-const getAdminLogs = asyncHandler(async (req, res) => {
-  const logs = await AdminLog.find()
+const getAdmins = asyncHandler(async (req, res) => {
+  const logs = await Admin.find()
     .populate(
       "performedBy targetUser targetSkill targetSwap",
       "username fullname name"
@@ -122,6 +122,6 @@ export {
   toggleAdminAccess,
   getAllUsers,
   downloadUserReport,
-  getAdminLogs,
+  getAdmins,
   clearExpiredNotifications,
 };

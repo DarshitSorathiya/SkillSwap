@@ -4,7 +4,7 @@ import {
   toggleAdminAccess,
   getAllUsers,
   downloadUserReport,
-  getAdminLogs,
+  getAdmins,
   clearExpiredNotifications,
 } from "../controllers/admin.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -15,7 +15,7 @@ const router = express.Router();
 router.get("/users", verifyJWT, isAdmin, getAllUsers);
 router.put("/ban/:userId", verifyJWT, isAdmin, toggleUserBan);
 router.put("/admin/:userId", verifyJWT, isAdmin, toggleAdminAccess);
-router.get("/logs", verifyJWT, isAdmin, getAdminLogs);
+router.get("/logs", verifyJWT, isAdmin, getAdmins);
 router.get("/report/users", verifyJWT, isAdmin, downloadUserReport);
 router.put(
   "/notifications/cleanup",

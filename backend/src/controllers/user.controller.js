@@ -273,7 +273,6 @@ const togglePrivacy = asyncHandler(async (req, res) => {
 export {
   register,
   login,
-  googleAuth,
   logout,
   deleteAccount,
   updateAccountDetails,
