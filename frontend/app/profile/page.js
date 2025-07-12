@@ -4,7 +4,7 @@ import React from 'react';
 
 const page = () => {
   return (
-    <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-2xl p-10 mt-10">
+    <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-2xl p-10 my-10">
       <div className="flex justify-between items-center flex-wrap">
         <div>
           <h2 className="text-4xl font-extrabold text-gray-900">Sarah Johnson</h2>
