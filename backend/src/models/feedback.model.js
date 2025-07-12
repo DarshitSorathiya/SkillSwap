@@ -37,6 +37,12 @@ const feedbackSchema = new mongoose.Schema(
       trim: true,
       maxlength: 300,
     },
+    editHistory: [
+      {
+        comment: String,
+        editedAt: Date,
+      },
+    ],
   },
   {
     timestamps: true,

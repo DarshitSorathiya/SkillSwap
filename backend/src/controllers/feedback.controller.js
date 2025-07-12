@@ -17,7 +17,7 @@ const giveFeedback = asyncHandler(async (req, res) => {
   if (!swap) throw new ApiError(404, "Swap not found");
   if (swap.status !== "accepted" && swap.status !== "completed") {
     throw new ApiError(400, "Feedback can only be left after a completed swap");
-  } 
+  }
 
   const existing = await Feedback.findOne({
     swap: swapId,
@@ -131,6 +131,30 @@ const deleteFeedback = asyncHandler(async (req, res) => {
   await feedback.save();
 
   res.status(200).json(new ApiResponse(200, {}, "Feedback soft-deleted"));
+});
+
+const editFeedback = asyncHandler(async (req, res) => {
+  const { feedbackId } = req.params;
+  const { comment } = req.body;
+
+  const feedback = await Feedback.findById(feedbackId);
+  if (!feedback) throw new ApiError(404, "Feedback not found");
+  if (String(feedback.fromUser) !== String(req.user._id)) {
+    throw new ApiError(403, "You can only edit your own feedback");
+  }
+
+  feedback.editHistory = feedback.editHistory || [];
+  feedback.editHistory.push({
+    comment: feedback.comment,
+    editedAt: new Date(),
+  });
+
+  feedback.comment = comment;
+  await feedback.save();
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, feedback, "Feedback edited successfully"));
 });
 
 export {

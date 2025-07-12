@@ -56,6 +56,23 @@ const respondToSwap = asyncHandler(async (req, res) => {
   swap.status = action;
   await swap.save();
 
+  if (action === "accepted") {
+    const recipientUser = await User.findById(swap.recipient);
+    const requesterUser = await User.findById(swap.requester);
+
+    await sendEmail(
+      requesterUser.email,
+      "Your Swap Request Was Accepted!",
+      `Hello ${requesterUser.fullname},
+
+Great news! Your swap request has been accepted by ${recipientUser.fullname}.
+You can now connect and proceed with the skill exchange.
+
+Thanks,
+Skill Swap Platform Team`
+    );
+  }
+
   res.status(200).json(new ApiResponse(200, swap, `Swap ${action}`));
 });
 

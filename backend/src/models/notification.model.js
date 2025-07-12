@@ -15,6 +15,10 @@ const notificationSchema = new mongoose.Schema(
       enum: ["all", "banned", "non-banned", "admins-only"],
       default: "all",
     },
+    recipient: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
