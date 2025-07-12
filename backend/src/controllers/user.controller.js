@@ -1,9 +1,10 @@
-import crypto from "crypto";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
 
 const cookieOptions = {
   httpOnly: true,
@@ -201,6 +202,72 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 
+const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select(
+    "-password -refreshToken"
+  );
+  if (!user) throw new ApiError(404, "User not found");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User fetched successfully"));
+});
+
+const uploadProfilePhoto = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  if (!req.file || !req.file.path) {
+    throw new ApiError(400, "No file uploaded");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(404, "User not found");
+
+  const uploadResult = await uploadOnCloudinary(req.file.path);
+
+  if (!uploadResult) {
+    throw new ApiError(500, "Cloudinary upload failed");
+  }
+
+  if (user.profilePhoto?.public_id) {
+    await cloudinary.uploader.destroy(user.profilePhoto.public_id);
+  }
+
+  user.profilePhoto = {
+    url: uploadResult.secure_url,
+    public_id: uploadResult.public_id,
+  };
+
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user.profilePhoto,
+        "Profile photo uploaded successfully"
+      )
+    );
+});
+
+const togglePrivacy = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user?._id);
+  if (!user) throw new ApiError(404, "User not found");
+
+  user.isPublicProfile = !user.isPublicProfile;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { isPublicProfile: user.isPublicProfile },
+        "Privacy status updated"
+      )
+    );
+});
+
 export {
   register,
   login,
@@ -208,4 +275,7 @@ export {
   deleteAccount,
   updateAccountDetails,
   changeCurrentPassword,
+  getCurrentUser,
+  uploadProfilePhoto,
+  togglePrivacy,
 };
