@@ -13,7 +13,7 @@ export default function Navbar() {
             <nav className="px-48 py-4 flex shadow-md justify-between items-center">
                 {/* Brand Name */}
                 <div className="text-green-500 text-2xl font-bold">
-                    <Link href="/">Skil Swapie</Link>
+                    <Link href="/">SkillSwap</Link>
                 </div>
 
                 {/* Right Side Buttons */}
