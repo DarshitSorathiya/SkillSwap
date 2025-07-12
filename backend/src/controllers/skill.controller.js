@@ -2,12 +2,17 @@ import { Skill } from "../models/skill.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import mongoose from "mongoose";
 
 const createSkill = asyncHandler(async (req, res) => {
   const { name, description, category, tags } = req.body;
 
-  if (!name?.trim()) {
-    throw new ApiError(400, "Skill name is required");
+  if (!name || typeof name !== "string" || !name.trim()) {
+    throw new ApiError(400, "Skill name is required and must be a string");
+  }
+
+  if (description && typeof description !== "string") {
+    throw new ApiError(400, "Description must be a string");
   }
 
   const existing = await Skill.findOne({
@@ -20,7 +25,7 @@ const createSkill = asyncHandler(async (req, res) => {
   }
 
   const skill = await Skill.create({
-    name,
+    name: name.toLowerCase(),
     description,
     createdBy: req.user._id,
     category,
@@ -56,11 +61,22 @@ const updateSkill = asyncHandler(async (req, res) => {
   const { skillId } = req.params;
   const { name, description, category, tags } = req.body;
 
+  if (!mongoose.Types.ObjectId.isValid(skillId)) {
+    throw new ApiError(400, "Invalid skill ID");
+  }
+
   const skill = await Skill.findOne({ _id: skillId, createdBy: req.user._id });
 
   if (!skill) throw new ApiError(404, "Skill not found");
   if (skill.isApproved)
     throw new ApiError(403, "Approved skills cannot be edited");
+
+  if (name && typeof name !== "string") {
+    throw new ApiError(400, "Skill name must be a string");
+  }
+  if (description && typeof description !== "string") {
+    throw new ApiError(400, "Description must be a string");
+  }
 
   skill.name = name?.toLowerCase() || skill.name;
   skill.description = description || skill.description;
@@ -76,6 +92,10 @@ const updateSkill = asyncHandler(async (req, res) => {
 
 const deleteSkill = asyncHandler(async (req, res) => {
   const { skillId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(skillId)) {
+    throw new ApiError(400, "Invalid skill ID");
+  }
 
   const skill = await Skill.findOne({
     _id: skillId,
@@ -130,6 +150,10 @@ const getSkillsForModeration = asyncHandler(async (req, res) => {
 const approveSkill = asyncHandler(async (req, res) => {
   const { skillId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(skillId)) {
+    throw new ApiError(400, "Invalid skill ID");
+  }
+
   const skill = await Skill.findById(skillId);
   if (!skill) throw new ApiError(404, "Skill not found");
 
@@ -144,6 +168,10 @@ const approveSkill = asyncHandler(async (req, res) => {
 
 const flagSkill = asyncHandler(async (req, res) => {
   const { skillId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(skillId)) {
+    throw new ApiError(400, "Invalid skill ID");
+  }
 
   const skill = await Skill.findById(skillId);
   if (!skill) throw new ApiError(404, "Skill not found");
