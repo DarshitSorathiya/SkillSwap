@@ -15,15 +15,25 @@ const userSchema = new mongoose.Schema(
     fullname: {
       type: String,
       required: true,
-      index: true,
     },
     email: {
       type: String,
       required: true,
+      unique: true,
       lowercase: true,
       trim: true,
-      index: true,
-      validate: [validator.isEmail, "Email format is not valid"],
+      validate: [validator.isEmail, "Invalid email format"],
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    location: {
+      type: String,
+      trim: true,
+    },
+    profilePhoto: {
+      type: String,
     },
     dob: {
       type: Date,
@@ -32,52 +42,54 @@ const userSchema = new mongoose.Schema(
         validator: function (value) {
           return value <= new Date();
         },
-        message: "Date of birth cannot be in the future.",
+        message: "DOB cannot be in the future.",
       },
     },
-    phoneNo: {
-      type: String,
-      required: true,
-      trim: true,
-      match: [/^[0-9]{10}$/, "Phone number must be exactly 10 digits"],
+    age: {
+      type: Number,
+      default: 0,
     },
     gender: {
       type: String,
       enum: ["male", "female", "other"],
     },
-    age: { type: Number, default: 0 },
-
-    password: {
+    phoneNo: {
       type: String,
-      required: [true, "Password must required"],
+      required: true,
+      trim: true,
+      match: [/^[0-9]{10}$/, "Phone number must be 10 digits"],
     },
-
-    location: { type: String },
-    availability: { type: String },
-
-    profileVisibility: {
-      type: String,
-      enum: ["public", "private"],
-      default: "public",
-    },
-    profilePhoto: { type: String },
 
     skillsOffered: [{ type: mongoose.Schema.Types.ObjectId, ref: "Skill" }],
     skillsWanted: [{ type: mongoose.Schema.Types.ObjectId, ref: "Skill" }],
 
-    role: {
-      type: String,
-      enum: ["user", "admin"],
-      default: "user",
+    availability: {
+      type: [String],
+      default: [],
+    },
+    isPublicProfile: {
+      type: Boolean,
+      default: true,
     },
 
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
     isBanned: {
       type: Boolean,
       default: false,
     },
 
-    refreshToken: {
-      type: String,
+    refreshToken: String,
+
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+    feedbackCount: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }
